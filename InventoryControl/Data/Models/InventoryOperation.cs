@@ -37,3 +37,4 @@ namespace InventoryControl.Data.Models
         public string? UserName { get; set; }
 
     }
+}
