@@ -1,0 +1,75 @@
+﻿@page "/inventory"
+@inject IDataService DbService
+@inject NavigationManager navigate
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>Список товаров</h3>
+
+@if (products == null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else if (!products.Any())
+{
+    <button class="btn btn-primary" @onclick="AddProduct">Добавить товар</button>
+    <p>Товары не найдены.</p>
+}
+else
+{
+    <button class="btn btn-primary" @onclick="AddProduct">Добавить товар</button>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Категория</th>
+                <th>Цена</th>
+                <th>Остаток</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Category</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td>@product.QuantityInStock</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="@(() => EditProduct(product.Id))">Изменить</button>
+                        <button class="btn btn-sm btn-danger ms-2" @onclick="@(() => DeleteProduct(product.Id))">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    private List<Product>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await DbService.GetAllProductsAsync();
+    }
+
+    private void EditProduct(int id)
+    {
+        navigate.NavigateTo($"/editinventory/{id}");
+    }
+
+    private void AddProduct()
+    {
+        Console.WriteLine("Навигация выполняется!"); // Проверьте вывод в консоли
+        navigate.NavigateTo("editinventory/add");
+    }
+
+    private async Task DeleteProduct(int id)
+    {
+        await DbService.DeleteProductAsync(id);
+        products = await DbService.GetAllProductsAsync(); // обновляем список
+    }
+}
