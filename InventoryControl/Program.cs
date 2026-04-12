@@ -6,6 +6,7 @@ using InventoryControl.Data.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 
 namespace InventoryControl
 {
@@ -20,6 +21,7 @@ namespace InventoryControl
                 .AddInteractiveServerComponents();
 
             builder.Services.AddCascadingAuthenticationState();
+            builder.Services.AddControllers();
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
@@ -62,12 +64,14 @@ namespace InventoryControl
 
             app.UseStaticFiles();
             app.UseAntiforgery();
+            app.MapControllers();
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
+            QuestPDF.Settings.License = LicenseType.Community;
 
             app.Run();
         }

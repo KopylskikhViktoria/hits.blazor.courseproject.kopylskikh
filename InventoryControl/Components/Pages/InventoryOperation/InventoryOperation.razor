@@ -10,12 +10,15 @@
 
 <div class="row mb-3">
     <div class="col">
-        <InputDate @bind-Value="fromDate" class="form-control" placeholder="С..." />
+        <label>Дата с:</label>
+        <InputDate @bind-Value="fromDate" class="form-control" />
     </div>
     <div class="col">
-        <InputDate @bind-Value="toDate" class="form-control" placeholder="По..." />
+        <label>Дата по:</label>
+        <InputDate @bind-Value="toDate" class="form-control" />
     </div>
     <div class="col">
+        <label>Тип операции:</label>
         <InputSelect @bind-Value="selectedType" class="form-control">
             <option value="">Все типы</option>
             @foreach (var type in Enum.GetValues<OperationType>())
@@ -25,7 +28,8 @@
         </InputSelect>
     </div>
     <div class="col">
-        <InputText @bind-Value="searchText" class="form-control" placeholder="Поиск по товару..." />
+        <label>Поиск по товару:</label>
+        <InputText @bind-Value="searchText" class="form-control" placeholder="Введите название..." />
     </div>
 </div>
 @if (filteredOperations == null)

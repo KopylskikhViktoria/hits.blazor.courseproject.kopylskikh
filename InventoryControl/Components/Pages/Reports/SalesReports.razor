@@ -1,0 +1,95 @@
+﻿@page "/sales"
+@using InventoryControl.Data.Models
+@inject IDataService DataService
+@attribute [Authorize]
+
+<h3>Отчет по продажам</h3>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label>Дата с:</label>
+        <InputDate @bind-Value="fromDate" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label>Дата по:</label>
+        <InputDate @bind-Value="toDate" class="form-control" />
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-primary" @onclick="LoadData">Показать</button>
+    </div>
+</div>
+
+@if (report == null)
+{
+    <p>Загрузка...</p>
+}
+else if (!report.Any())
+{
+    <p>Продажи за выбранный период не найдены.</p>
+}
+else
+{
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Кол-во продаж</th>
+                <th>Общая сумма</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in report)
+            {
+                <tr>
+                    <td>@row.ProductName</td>
+                    <td>@row.TotalQuantity</td>
+                    <td>@row.TotalSum.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a class="btn btn-success mt-3" href="@GetPdfUrl()" target="_blank">Скачать PDF</a>
+}
+
+@code {
+    private List<SalesReportRow>? report;
+
+    private DateTime? fromDate = DateTime.Today.AddDays(-30);
+    private DateTime? toDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var sales = await DataService.GetAllInventoryOperationsAsync();
+
+        var filteredSales = sales
+            .Where(o => o.OperationType == OperationType.Sale)
+            .Where(o => !fromDate.HasValue || o.Date.Date >= fromDate.Value.Date)
+            .Where(o => !toDate.HasValue || o.Date.Date <= toDate.Value.Date);
+
+        report = filteredSales
+            .GroupBy(o => new { o.ProductId, ProductName = o.Product.Name, Price = o.Product.Price })
+            .Select(g => new SalesReportRow
+            {
+                ProductName = g.Key.ProductName,
+                TotalQuantity = g.Sum(x => x.Quantity),
+                TotalSum = g.Sum(x => x.Quantity * g.Key.Price)
+            })
+            .ToList();
+
+        StateHasChanged();
+    }
+
+    private string GetPdfUrl()
+    {
+        var from = fromDate?.ToString("yyyy-MM-dd");
+        var to = toDate?.ToString("yyyy-MM-dd");
+
+        return $"/api/reports/sales/pdf?fromDate={from}&toDate={to}";
+    }
+}
