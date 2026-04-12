@@ -1,0 +1,121 @@
+﻿@page "/inventoryoperation"
+@inject IDataService DbService
+@inject NavigationManager navigate
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>Журнал операций со складом</h3>
+
+<a href="inventory/stock" class="btn btn-outline-primary mb-3">Посмотреть остатки</a>
+
+<div class="row mb-3">
+    <div class="col">
+        <InputDate @bind-Value="fromDate" class="form-control" placeholder="С..." />
+    </div>
+    <div class="col">
+        <InputDate @bind-Value="toDate" class="form-control" placeholder="По..." />
+    </div>
+    <div class="col">
+        <InputSelect @bind-Value="selectedType" class="form-control">
+            <option value="">Все типы</option>
+            @foreach (var type in Enum.GetValues<OperationType>())
+            {
+                <option value="@type">@GetOperationTypeName(type)</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="col">
+        <InputText @bind-Value="searchText" class="form-control" placeholder="Поиск по товару..." />
+    </div>
+</div>
+@if (filteredOperations == null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else if (!filteredOperations.Any())
+{
+    <p>Операции не найдены.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Тип операции</th>
+                <th>Дата</th>
+                <th>Сотрудник</th>
+                <th>Товар</th>
+                <th>Кол-во</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var op in filteredOperations)
+
+            {
+                <tr>
+                    <td>@GetOperationTypeName(op.OperationType)</td>
+
+                    <td>@op.Date.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@op.Employee?.FullName</td>
+                    <td>@op.Product?.Name</td>
+                    <td>@op.Quantity</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-2" @onclick='() => navigate.NavigateTo($"/inventoryoperation/edit/{op.Id}")'>Редактировать</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => Delete(op.Id)">Удалить</button>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+}
+<button class="btn btn-success mt-3" @onclick='() => navigate.NavigateTo("/inventoryoperation/add")'>
+    Добавить операцию
+</button>
+
+
+@code {
+    private List<InventoryControl.Data.Models.InventoryOperation>? operations;
+    private string searchText = "";
+    private string? selectedType = null;
+    private DateTime? fromDate = null;
+    private DateTime? toDate = null;
+
+    private IEnumerable<InventoryControl.Data.Models.InventoryOperation> filteredOperations =>
+    operations == null ? Enumerable.Empty<InventoryControl.Data.Models.InventoryOperation>() :
+    operations
+        .Where(o => string.IsNullOrWhiteSpace(searchText) ||
+                    (o.Product?.Name?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(o => string.IsNullOrEmpty(selectedType) || o.OperationType.ToString() == selectedType)
+        .Where(o => !fromDate.HasValue || o.Date >= fromDate.Value)
+        .Where(o => !toDate.HasValue || o.Date <= toDate.Value);
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        operations = await DbService.GetAllInventoryOperationsAsync();
+    }
+
+    private async Task Delete(int id)
+    {
+        await DbService.DeleteInventoryOperationAsync(id);
+        operations = await DbService.GetAllInventoryOperationsAsync(); // обновим список
+    }
+
+    private string GetOperationTypeName(OperationType type) =>
+    type switch
+    {
+        OperationType.Purchase => "Поступление",
+        OperationType.Sale => "Продажа",
+        OperationType.WriteOff => "Списание",
+        OperationType.Return => "Возврат",
+        _ => type.ToString()
+    };
+
+
+
+}

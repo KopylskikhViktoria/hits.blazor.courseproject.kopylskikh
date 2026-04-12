@@ -1,0 +1,80 @@
+﻿@page "/inventory/add"
+@page "/inventory/edit/{ProductId:int}"
+@inject IDataService DataService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>@(IsEditMode ? "Редактировать товар" : "Добавить товар")</h3>
+
+<!-- Forma redaktirovaniya ili dobavleniya tovara -->
+<EditForm Model="@product" OnValidSubmit="Save">
+    <!-- Vklyuchaet proverku atributov validacii iz modeli -->
+    <DataAnnotationsValidator />
+
+    <!-- Pokazyvaet obshchii spisok oshibok validacii -->
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Название:</label>
+        <!-- Privyazka polya k nazvaniyu tovara -->
+        <InputText class="form-control" @bind-Value="product.Name" />
+        <ValidationMessage For="() => product.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label>Категория:</label>
+        <InputText class="form-control" @bind-Value="product.Category" />
+    </div>
+
+    <div class="mb-3">
+        <label>Цена:</label>
+        <!-- Vvod chisla dlya ceny -->
+        <InputNumber class="form-control" @bind-Value="product.Price" />
+        <ValidationMessage For="() => product.Price" />
+    </div>
+
+    <div class="mb-3">
+        <label>Остаток на складе:</label>
+        <InputNumber class="form-control" @bind-Value="product.QuantityInStock" />
+        <ValidationMessage For="() => product.QuantityInStock" />
+    </div>
+
+    <!-- Sohranit izmeneniya -->
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+
+    <!-- Vernutsya k spisku tovarov bez sohraneniya -->
+    <button type="button" class="btn btn-secondary" @onclick='() => NavManager.NavigateTo("/inventory")'>
+        Отмена
+    </button>
+</EditForm>
+
+@code {
+    // Parametr iz marshruta. Esli est ProductId, znachit eto rezhim redaktirovaniya
+    [Parameter]
+    public int? ProductId { get; set; }
+
+    // Model tovara dlya formy
+    private Product product = new();
+
+    // Esli est id, rabotaem v rezhime redaktirovaniya
+    private bool IsEditMode => ProductId.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Pri redaktirovanii zagruzhaem tovar iz bazy
+        if (IsEditMode && ProductId != null)
+        {
+            product = await DataService.GetProductByIdAsync(ProductId.Value) ?? new();
+        }
+    }
+
+    private async Task Save()
+    {
+        // Dobavit novyi tovar ili obnovit sushchestvuyushchii
+        await DataService.AddOrUpdateProductAsync(product);
+
+        // Posle sohraneniya vernutsya k spisku tovarov
+        NavManager.NavigateTo("/inventory");
+    }
+}

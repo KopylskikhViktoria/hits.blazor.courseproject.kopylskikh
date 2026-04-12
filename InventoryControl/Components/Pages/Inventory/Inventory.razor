@@ -58,13 +58,13 @@ else
 
     private void EditProduct(int id)
     {
-        navigate.NavigateTo($"/editinventory/{id}");
+        navigate.NavigateTo($"/inventory/edit/{id}");
     }
 
     private void AddProduct()
     {
         Console.WriteLine("Навигация выполняется!"); // Проверьте вывод в консоли
-        navigate.NavigateTo("editinventory/add");
+        navigate.NavigateTo("inventory/add");
     }
 
     private async Task DeleteProduct(int id)
