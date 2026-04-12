@@ -1,0 +1,88 @@
+﻿@page "/inventoryoperation/edit/{Id:int}"
+@inject IDataService DataService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>Редактировать операцию</h3>
+
+
+
+<EditForm Model="@operation" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Тип операции:</label>
+        <InputSelect class="form-control" @bind-Value="operation.OperationType">
+            @foreach (var type in Enum.GetValues<OperationType>())
+            {
+                <option value="@type">@type</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => operation.OperationType" />
+    </div>
+
+    <div class="mb-3">
+        <label>Товар:</label>
+        <InputSelect class="form-control" @bind-Value="operation.ProductId">
+            <option value="0">-- выберите товар --</option>
+            @foreach (var p in products)
+            {
+                <option value="@p.Id">@p.Name</option>
+            }
+        </InputSelect>
+
+        <ValidationMessage For="() => operation.ProductId" />
+    </div>
+
+    <div class="mb-3">
+        <label>Сотрудник:</label>
+        <InputSelect class="form-control" @bind-Value="operation.EmployeeId">
+            <option value="@((int?)null)">---</option>
+            @foreach (var e in employees)
+            {
+                <option value="@e.Id">@e.FullName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label>Количество:</label>
+        <InputNumber class="form-control" @bind-Value="operation.Quantity" />
+        <ValidationMessage For="() => operation.Quantity" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <button type="button" class="btn btn-secondary" @onclick='() => NavManager.NavigateTo("/inventoryoperation")'>
+        Отмена
+    </button>
+</EditForm>
+
+@code {
+
+    private InventoryControl.Data.Models.InventoryOperation operation = new() { Date = DateTime.Now };
+    private List<Product> products = new();
+    private List<Employee> employees = new();
+
+    [Parameter] public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await DataService.GetAllProductsAsync();
+        employees = await DataService.GetAllEmployeesAsync();
+
+        var existing = await DataService.GetInventoryOperationByIdAsync(Id);
+        if (existing != null)
+            operation = existing;
+    }
+
+    private async Task Save()
+    {
+        await DataService.UpdateInventoryOperationAsync(operation);
+        NavManager.NavigateTo("/inventoryoperation");
+    }
+
+
+}
+

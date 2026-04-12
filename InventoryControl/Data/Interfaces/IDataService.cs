@@ -15,6 +15,8 @@ namespace InventoryControl.Data.Interfaces
         Task<List<Employee>> GetAllEmployeesAsync();
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task AddOrUpdateEmployeeAsync(Employee employee);
+        Task DeleteEmployeeAsync(int id);
+
 
         // Skladskie operacii
         Task<List<InventoryOperation>> GetAllInventoryOperationsAsync();

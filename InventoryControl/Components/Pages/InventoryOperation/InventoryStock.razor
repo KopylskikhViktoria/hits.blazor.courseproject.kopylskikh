@@ -1,0 +1,39 @@
+﻿@page "/inventory/stock"
+@inject IDataService DataService
+@attribute [Authorize]
+
+<h3>Остатки товаров на складе</h3>
+
+@if (products == null)
+{
+    <p>Загрузка...</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Остаток</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.QuantityInStock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Product>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await DataService.GetAllProductsAsync();
+    }
+}

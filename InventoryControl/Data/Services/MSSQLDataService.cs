@@ -69,14 +69,15 @@ namespace InventoryControl.Data.Services
         // Dobavit skladskuyu operaciyu
         public async Task AddInventoryOperationAsync(InventoryOperation operation)
         {
-            // Proverka sushchestvovaniya tovara
             var product = await _db.Products.FindAsync(operation.ProductId);
             if (product == null)
                 throw new ArgumentException("Tovar ne naiden");
 
+            // Primenyaem operaciyu k ostatku tovara
+            ApplyOperationToStock(product, operation);
+
             _db.InventoryOperations.Add(operation);
 
-            // Audit log - sluzhebnyi zhurnal deistvii
             _db.AuditLogs.Add(new AuditLog
             {
                 Action = "Dobavlenie",
@@ -109,15 +110,33 @@ namespace InventoryControl.Data.Services
             await _db.SaveChangesAsync();
         }
 
+        // Udalit sotrudnika po Id
+        public async Task DeleteEmployeeAsync(int id)
+        {
+            var employee = await _db.Employees.FindAsync(id);
+            if (employee != null)
+            {
+                _db.Employees.Remove(employee);
+                await _db.SaveChangesAsync();
+            }
+        }
+
         // Udalit operaciyu po Id
         public async Task DeleteInventoryOperationAsync(int id)
         {
-            var op = await _db.InventoryOperations.FindAsync(id);
-            if (op != null)
+            var operation = await _db.InventoryOperations.FindAsync(id);
+            if (operation == null)
+                return;
+
+            var product = await _db.Products.FindAsync(operation.ProductId);
+            if (product != null)
             {
-                _db.InventoryOperations.Remove(op);
-                await _db.SaveChangesAsync();
+                // Otkatyvaem vliyanie operacii na ostatok
+                ApplyOperationToStock(product, operation, reverse: true);
             }
+
+            _db.InventoryOperations.Remove(operation);
+            await _db.SaveChangesAsync();
         }
 
         // Poluchit operaciyu po Id vmeste so svyazannymi dannymi
@@ -132,8 +151,48 @@ namespace InventoryControl.Data.Services
         // Obnovit operaciyu
         public async Task UpdateInventoryOperationAsync(InventoryOperation operation)
         {
+            var existingOperation = await _db.InventoryOperations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == operation.Id);
+
+            if (existingOperation == null)
+                throw new ArgumentException("Операция не найдена");
+
+            // Otkatyvaem staroe vliyanie operacii
+            var oldProduct = await _db.Products.FindAsync(existingOperation.ProductId);
+            if (oldProduct != null)
+            {
+                ApplyOperationToStock(oldProduct, existingOperation, reverse: true);
+            }
+
+            // Primenyaem novoe vliyanie operacii
+            var newProduct = await _db.Products.FindAsync(operation.ProductId);
+            if (newProduct == null)
+                throw new ArgumentException("Товар не найден");
+
+            ApplyOperationToStock(newProduct, operation);
+
             _db.InventoryOperations.Update(operation);
             await _db.SaveChangesAsync();
+        }
+
+        // Izmenyaet tekushchii ostatok tovara v zavisimosti ot tipa operacii
+        private void ApplyOperationToStock(Product product, InventoryOperation operation, bool reverse = false)
+        {
+            int quantity = reverse ? -operation.Quantity : operation.Quantity;
+
+            switch (operation.OperationType)
+            {
+                case OperationType.Purchase:
+                case OperationType.Return:
+                    product.QuantityInStock += quantity;
+                    break;
+
+                case OperationType.Sale:
+                case OperationType.WriteOff:
+                    product.QuantityInStock -= quantity;
+                    break;
+            }
         }
     }
 }

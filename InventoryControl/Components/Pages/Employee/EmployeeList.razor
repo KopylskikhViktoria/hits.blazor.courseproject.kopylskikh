@@ -1,5 +1,68 @@
-﻿<h3>EmployeeList</h3>
+﻿@page "/employees"
+@inject IDataService DataService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>Сотрудники</h3>
+
+@if (employees == null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else if (!employees.Any())
+{
+    <p>Сотрудники не найдены.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Должность</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in employees)
+            {
+                <tr>
+                    <td>@e.FullName</td>
+                    <td>@e.Position</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => EditEmployee(e.Id)">Изменить</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteEmployee(e.Id)">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-success mt-3" @onclick="AddEmployee">Добавить сотрудника</button>
 
 @code {
+    private List<Employee> employees = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await DataService.GetAllEmployeesAsync();
+    }
+
+    private void AddEmployee()
+    {
+        NavManager.NavigateTo("/employee/add");
+    }
+
+    private void EditEmployee(int id)
+    {
+        NavManager.NavigateTo($"/employee/edit/{id}");
+    }
+
+    private async Task DeleteEmployee(int id)
+    {
+        await DataService.DeleteEmployeeAsync(id);
+        employees = await DataService.GetAllEmployeesAsync();
+    }
 }

@@ -1,0 +1,49 @@
+﻿@page "/employee/add"
+@page "/employee/edit/{EmployeeId:int}"
+@inject IDataService DataService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<h3>@(IsEditMode ? "Редактировать сотрудника" : "Добавить сотрудника")</h3>
+
+<EditForm Model="@employee" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>ФИО:</label>
+        <InputText class="form-control" @bind-Value="employee.FullName" />
+        <ValidationMessage For="() => employee.FullName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Должность:</label>
+        <InputText class="form-control" @bind-Value="employee.Position" />
+        <ValidationMessage For="() => employee.Position" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <button type="button" class="btn btn-secondary" @onclick='() => NavManager.NavigateTo("/employees")'>Отмена</button>
+</EditForm>
+
+@code {
+    [Parameter] public int? EmployeeId { get; set; }
+
+    private Employee employee = new();
+    private bool IsEditMode => EmployeeId.HasValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (EmployeeId is int employeeId)
+        {
+            employee = await DataService.GetEmployeeByIdAsync(employeeId) ?? new();
+        }
+    }
+
+    private async Task Save()
+    {
+        await DataService.AddOrUpdateEmployeeAsync(employee);
+        NavManager.NavigateTo("/employees");
+    }
+}

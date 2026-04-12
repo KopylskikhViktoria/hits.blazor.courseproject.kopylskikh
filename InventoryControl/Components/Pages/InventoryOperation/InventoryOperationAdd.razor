@@ -1,0 +1,102 @@
+﻿@page "/inventoryoperation/add"
+@inject IDataService DataService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+@inject UserManager<ApplicationUser> UserManager
+
+@rendermode InteractiveServer
+
+<h3>Добавить операцию</h3>
+
+<EditForm Model="@operation" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Тип операции:</label>
+        <InputSelect class="form-control" @bind-Value="operation.OperationType">
+            @foreach (var type in Enum.GetValues<OperationType>())
+            {
+                <option value="@type">@GetOperationTypeName(type)</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => operation.OperationType" />
+    </div>
+
+    <div class="mb-3">
+        <label>Товар:</label>
+        <InputSelect class="form-control" @bind-Value="operation.ProductId">
+            <option value="0">-- выберите товар --</option>
+            @foreach (var p in products)
+            {
+                <option value="@p.Id">@p.Name</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="() => operation.ProductId" />
+    </div>
+
+    <div class="mb-3">
+        <label>Сотрудник:</label>
+        <InputSelect class="form-control" @bind-Value="operation.EmployeeId">
+            <option value="@((int?)null)">---</option>
+            @foreach (var e in employees)
+            {
+                <option value="@e.Id">@e.FullName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label>Количество:</label>
+        <InputNumber class="form-control" @bind-Value="operation.Quantity" />
+        <ValidationMessage For="() => operation.Quantity" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <button type="button" class="btn btn-secondary" @onclick='() => NavManager.NavigateTo("/inventoryoperation")'>
+        Отмена
+    </button>
+</EditForm>
+
+@code {
+    private InventoryControl.Data.Models.InventoryOperation operation = new() { Date = DateTime.Now };
+    private List<Product> products = new();
+    private List<Employee> employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Загружаем товары и сотрудников
+        products = await DataService.GetAllProductsAsync();
+        employees = await DataService.GetAllEmployeesAsync();
+
+        // Очищаем автоматическую привязку — пусть пользователь сам выбирает сотрудника
+        operation.UserName = ""; // или можно вообще не трогать, если поле не обязательно
+    }
+
+
+    private async Task Save()
+    {
+        operation.Date = DateTime.Now;
+
+        try
+        {
+            await DataService.AddInventoryOperationAsync(operation);
+            Console.WriteLine("✅ Операция успешно добавлена пользователем " + operation.UserName);
+            NavManager.NavigateTo("/inventoryoperation");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("❌ Ошибка при сохранении: " + ex.Message);
+        }
+    }
+
+    private string GetOperationTypeName(OperationType type) =>
+        type switch
+        {
+            OperationType.Purchase => "Поступление",
+            OperationType.Sale => "Продажа",
+            OperationType.WriteOff => "Списание",
+            OperationType.Return => "Возврат",
+            _ => type.ToString()
+        };
+}
