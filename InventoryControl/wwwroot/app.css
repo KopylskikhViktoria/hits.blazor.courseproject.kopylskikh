@@ -1,18 +1,18 @@
 /* Общие настройки */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background-color: #f5f6fa;
+    background-color: #F3F6F9;
 }
 
 /* Основной стиль ссылок и кнопок */
 a, .btn-link {
-    color: #006bb7;
+    color: #4F6B85;
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: #5F7387;
+    border-color: #55687A;
 }
 
 .btn:focus,

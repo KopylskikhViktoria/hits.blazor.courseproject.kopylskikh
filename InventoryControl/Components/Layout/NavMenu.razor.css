@@ -14,14 +14,14 @@
 
     /* Hover ������ */
     .nav-link:hover {
-        background-color: #f1f5f9;
+        background-color: #DCE6EF;
         color: #0f172a;
     }
 
     /* �������� ������� */
     .nav-link.active {
-        background-color: #dbeafe; /* ������� ��� �� DTF */
-        color: #1d4ed8;
+        background-color: #5F7387;
+        color: #ffffff;
     }
 
     /* ������ */
@@ -38,7 +38,7 @@
 }
 
 .navbar {
-    background-color: #D9F0FF;
+    background-color: #C9D8E6;
 }
 
 /* ����� ��� ������ Logout */
@@ -61,11 +61,19 @@ form .nav-link {
 
 /* ��������� */
 .sidebar-title {
-    background-color: #D9F0FF;
+    background-color: #C9D8E6;
     color: #1e293b;
 }
 
     .sidebar-title:hover {
-        background-color: #D9F0FF;
+        background-color: #C9D8E6;
         color: #495057;
+    }
+
+.navbar-brand {
+    color: #4f5d6b !important;
+}
+
+    .navbar-brand:hover {
+        color: #ffffff !important;
     }
