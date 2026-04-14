@@ -1,4 +1,4 @@
-/* ������� ���, ����������� ���� */
+
 .nav-link {
     background: none;
     border: none;
@@ -12,26 +12,22 @@
 }
 
 
-    /* Hover ������ */
     .nav-link:hover {
         background-color: #DCE6EF;
         color: #0f172a;
     }
 
-    /* �������� ������� */
     .nav-link.active {
         background-color: #5F7387;
         color: #ffffff;
     }
 
-    /* ������ */
     .nav-link span {
         margin-right: 0.5rem;
         font-size: 1.2rem;
         color: #1e293b;
     }
 
-/* �������� ���� */
 .nav-item {
     font-size: 0.95rem;
     margin-bottom: 0.5rem;
@@ -41,7 +37,7 @@
     background-color: #C9D8E6;
 }
 
-/* ����� ��� ������ Logout */
+/* Logout */
 form .nav-link {
     background: none;
     border: none;
@@ -59,7 +55,6 @@ form .nav-link {
         color: #0f172a;
     }
 
-/* ��������� */
 .sidebar-title {
     background-color: #C9D8E6;
     color: #1e293b;
